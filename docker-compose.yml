@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DBT_PROFILES_DIR: /app/dbt
+      PREFECT_BACKEND: server
+      PREFECT__SERVER__API: http://scheduler:4200/graphql
+    volumes:
+      - ./app:/app
+      - ./dbt:/app/dbt
+    depends_on:
+      - dbt
+      - scheduler
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-bigquery
+    environment:
+      DBT_PROJECT_DIR: /app/dbt
+      DBT_PROFILES_DIR: /app/dbt
+      DBT_PROFILES_PROFILE: my-gcp-profile
+      GOOGLE_APPLICATION_CREDENTIALS: /app/creds.json
+    volumes:
+      - ./dbt:/app/dbt
+      - ./creds.json:/app/creds.json
+    networks:
+      - appnet
+
+  scheduler:
+    image: prefecthq/prefect:latest
+    command: prefect server start
+    environment:
+      PREFECT_SERVER__BACKEND: server
+      PREFECT_SERVER__POSTGRES__PASSWORD: mysecretpassword
+    volumes:
+      - prefect-data:/root/.prefect/
+    ports:
+      - "4200:4200"
+    networks:
+      - appnet
+
+volumes:
+  prefect-data:
+
+networks:
+  appnet:

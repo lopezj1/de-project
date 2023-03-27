@@ -1,0 +1,6 @@
+google-cloud-bigquery==3.6.0 
+prefect==1.2.2
+gh=2.20.2
+prefect-gcp=0.3.0
+pandas=1.5.2
+pandas-gbq= 0.18.1
